@@ -1,5 +1,4 @@
-import json
-
+from scribble.core.parsing import parse_json
 from scribble.core.llm import ask
 from scribble.core.models import Outline
 
@@ -20,19 +19,10 @@ Rules:
 - The title should make someone stop scrolling."""
 
 
-def _clean(raw: str) -> str:
-    """Models often wrap JSON in ```json fences. Strip them."""
-    text = raw.strip()
-    if text.startswith("```"):
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
-    return text.strip()
-
 
 def plan(topic: str) -> Outline:
     raw = ask(SYSTEM, f"Topic: {topic}")
-    data = json.loads(_clean(raw))
+    data = parse_json(raw)
     return Outline(
         topic=topic,
         title=data["title"],
