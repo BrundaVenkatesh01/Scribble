@@ -53,15 +53,18 @@ def revise(draft: Draft, issues: list[str]) -> Draft:
     return Draft(title=draft.title, body=body)
 
 def polish(draft: Draft, target: int = 8, max_rounds: int = 2) -> tuple[Draft, dict]:
-    """Critique and revise until the draft scores well enough or rounds run out."""
+    """Critique and revise, keeping whichever version scored best."""
     report = critique(draft)
-    rounds = 0
+    best_draft, best_report = draft, report
 
-    while report["score"] < target and rounds < max_rounds:
-        rounds += 1
-        print(f"  round {rounds}: scored {report['score']}, revising...")
+    for round_num in range(1, max_rounds + 1):
+        if report["score"] >= target:
+            break
+        print(f"  round {round_num}: scored {report['score']}, revising...")
         draft = revise(draft, report["issues"])
         report = critique(draft)
+        if report["score"] > best_report["score"]:
+            best_draft, best_report = draft, report
 
-    print(f"  final score: {report['score']} after {rounds} revision(s)")
-    return draft, report
+    print(f"  best score: {best_report['score']}")
+    return best_draft, best_report
