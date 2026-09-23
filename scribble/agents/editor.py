@@ -29,3 +29,22 @@ def critique(draft: Draft) -> dict:
     prompt = f"# {draft.title}\n\n{draft.body}"
     data = parse_json(ask(CRITIC_SYSTEM, prompt))
     return {"score": int(data["score"]), "issues": data["issues"]}
+
+
+REVISER_SYSTEM = """You are a blog editor revising a draft.
+
+You will be given a draft and a list of issues found by a critic.
+Return the FULL revised draft in markdown. No commentary, no preamble.
+
+Rules:
+- Fix every issue listed.
+- Remove any statistic you cannot stand behind rather than inventing a new one.
+- Keep the section headings and overall structure.
+- Keep what already works. Do not rewrite for the sake of rewriting."""
+
+
+def revise(draft: Draft, issues: list[str]) -> Draft:
+    """Rewrite a draft to address the critic's issues."""
+    problems = "\n".join(f"- {i}" for i in issues)
+    prompt = f"# {draft.title}\n\n{draft.body}\n\n---\nIssues to fix:\n{problems}"
+    return Draft(title=draft.title, body=ask(REVISER_SYSTEM, prompt))
