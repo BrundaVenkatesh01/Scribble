@@ -47,4 +47,21 @@ def revise(draft: Draft, issues: list[str]) -> Draft:
     """Rewrite a draft to address the critic's issues."""
     problems = "\n".join(f"- {i}" for i in issues)
     prompt = f"# {draft.title}\n\n{draft.body}\n\n---\nIssues to fix:\n{problems}"
-    return Draft(title=draft.title, body=ask(REVISER_SYSTEM, prompt))
+    body = ask(REVISER_SYSTEM, prompt).strip()
+    if body.startswith("# "):
+        body = body.split("\n", 1)[1].lstrip()
+    return Draft(title=draft.title, body=body)
+
+def polish(draft: Draft, target: int = 8, max_rounds: int = 2) -> tuple[Draft, dict]:
+    """Critique and revise until the draft scores well enough or rounds run out."""
+    report = critique(draft)
+    rounds = 0
+
+    while report["score"] < target and rounds < max_rounds:
+        rounds += 1
+        print(f"  round {rounds}: scored {report['score']}, revising...")
+        draft = revise(draft, report["issues"])
+        report = critique(draft)
+
+    print(f"  final score: {report['score']} after {rounds} revision(s)")
+    return draft, report
